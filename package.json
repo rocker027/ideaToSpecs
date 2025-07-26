@@ -1,0 +1,45 @@
+{
+  "name": "idea-to-specs",
+  "version": "1.0.0",
+  "description": "Local web application for generating product specifications from ideas using Gemini CLI",
+  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "start:frontend": "npm run preview --workspace=frontend",
+    "start:backend": "npm start --workspace=backend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:production": "./scripts/start-production.sh",
+    "build": "npm run build:frontend",
+    "setup": "npm run install:all && npm run setup:db",
+    "setup:db": "node scripts/setup-database.js",
+    "test": "npm run test --workspace=backend",
+    "validate": "node backend/validate-deployment.js",
+    "monitor": "node backend/performance-monitor.js"
+  },
+  "keywords": [
+    "react",
+    "nodejs",
+    "gemini",
+    "specifications",
+    "turso",
+    "ideas"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(npm create:*)",
+      "Bash(chmod:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(node:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(mv:*)",
+      "Bash(npm start)",
+      "Bash(curl:*)",
+      "Bash(lsof:*)",
+      "Bash(telnet:*)",
+      "Bash(nc:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(NODE_OPTIONS=\"--dns-result-order=ipv4first\" node server.js)",
+      "Bash(find:*)"
+    ],
+    "deny": []
+  }
+}

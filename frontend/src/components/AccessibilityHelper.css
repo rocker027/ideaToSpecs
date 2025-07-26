@@ -1,0 +1,396 @@
+/* Accessibility Helper Styles */
+
+/* Screen reader only content */
+.screen-reader-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Skip Links */
+.skip-links {
+  position: fixed;
+  top: -100px;
+  left: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.skip-links__link {
+  background: #000;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: 0 4px 4px 0;
+  transition: top 0.3s ease;
+}
+
+.skip-links__link:focus {
+  top: 0;
+}
+
+.skip-links__link:hover,
+.skip-links__link:focus {
+  background: #333;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Accessibility Settings Modal */
+.accessibility-settings {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.accessibility-settings__content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+.accessibility-settings__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.accessibility-settings__header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.accessibility-settings__close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accessibility-settings__close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.accessibility-settings__close:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.accessibility-settings__options {
+  padding: 1rem 1.5rem;
+}
+
+.accessibility-settings__option {
+  margin-bottom: 1.5rem;
+}
+
+.accessibility-settings__option:last-child {
+  margin-bottom: 0;
+}
+
+.accessibility-settings__option label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: #374151;
+}
+
+.accessibility-settings__option input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.accessibility-settings__description {
+  margin: 0.5rem 0 0 2rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.accessibility-settings__footer {
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.accessibility-settings__reset {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.accessibility-settings__reset:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.accessibility-settings__reset:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Live Region */
+.live-region {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .accessibility-settings {
+    padding: 0.5rem;
+  }
+  
+  .accessibility-settings__content {
+    max-height: 90vh;
+    border-radius: 8px;
+  }
+  
+  .accessibility-settings__header {
+    padding: 1rem;
+  }
+  
+  .accessibility-settings__header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .accessibility-settings__options {
+    padding: 1rem;
+  }
+  
+  .accessibility-settings__option {
+    margin-bottom: 1.25rem;
+  }
+  
+  .accessibility-settings__description {
+    margin-left: 1.75rem;
+  }
+  
+  .accessibility-settings__footer {
+    padding: 1rem;
+  }
+}
+
+/* Global accessibility modifications */
+
+/* Reduced motion */
+.reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* High contrast mode */
+.high-contrast {
+  filter: contrast(1.5);
+}
+
+.high-contrast * {
+  border-color: #000 !important;
+}
+
+.high-contrast a {
+  text-decoration: underline !important;
+}
+
+/* Large text */
+.large-text {
+  font-size: 120% !important;
+}
+
+.large-text * {
+  line-height: 1.6 !important;
+}
+
+/* Screen reader optimizations */
+.screen-reader-optimized .screen-reader-only {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0.5rem !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+  border: 1px solid #d1d5db !important;
+  background: #f9fafb;
+  font-size: 0.875rem;
+  border-radius: 4px;
+}
+
+/* Enhanced keyboard navigation */
+.keyboard-navigation *:focus {
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+.keyboard-navigation button:focus,
+.keyboard-navigation a:focus,
+.keyboard-navigation input:focus,
+.keyboard-navigation textarea:focus,
+.keyboard-navigation select:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Focus indicators for interactive elements */
+.keyboard-navigation [role="button"]:focus,
+.keyboard-navigation [tabindex]:focus {
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}
+
+/* Ensure sufficient color contrast for focused elements */
+.keyboard-navigation *:focus {
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Make sure focus is visible on all interactive elements */
+.keyboard-navigation button,
+.keyboard-navigation a,
+.keyboard-navigation input,
+.keyboard-navigation textarea,
+.keyboard-navigation select,
+.keyboard-navigation [role="button"],
+.keyboard-navigation [tabindex] {
+  position: relative;
+}
+
+/* Animation for accessibility settings */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Disable animations in reduced motion mode */
+@media (prefers-reduced-motion: reduce) {
+  .accessibility-settings__content {
+    animation: none;
+  }
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+  .accessibility-settings__content {
+    border: 2px solid #000;
+  }
+  
+  .accessibility-settings__close {
+    border: 1px solid #000;
+  }
+  
+  .accessibility-settings__reset {
+    border: 2px solid #000;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .accessibility-settings__content {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .accessibility-settings__header {
+    border-bottom-color: #374151;
+  }
+  
+  .accessibility-settings__header h2 {
+    color: #f9fafb;
+  }
+  
+  .accessibility-settings__close {
+    color: #9ca3af;
+  }
+  
+  .accessibility-settings__close:hover {
+    background: #374151;
+    color: #d1d5db;
+  }
+  
+  .accessibility-settings__option label {
+    color: #d1d5db;
+  }
+  
+  .accessibility-settings__description {
+    color: #9ca3af;
+  }
+  
+  .accessibility-settings__footer {
+    border-top-color: #374151;
+  }
+  
+  .accessibility-settings__reset {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+  
+  .accessibility-settings__reset:hover {
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+  
+  .screen-reader-optimized .screen-reader-only {
+    background: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #f9fafb !important;
+  }
+}

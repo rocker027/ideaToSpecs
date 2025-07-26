@@ -1,0 +1,281 @@
+.spec-preview {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.spec-preview__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
+  gap: 16px;
+}
+
+.spec-preview__title h2 {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.spec-preview__original-idea {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.spec-preview__content {
+  padding: 24px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Loading state */
+.spec-preview--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.spec-preview__loading {
+  text-align: center;
+  color: #64748b;
+}
+
+.spec-preview__spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f1f5f9;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spec-preview__loading h3 {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 1.25rem;
+}
+
+.spec-preview__loading p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Empty state */
+.spec-preview--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.spec-preview__empty {
+  text-align: center;
+  color: #94a3b8;
+}
+
+.spec-preview__empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.spec-preview__empty h3 {
+  margin: 0 0 8px 0;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.spec-preview__empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Markdown content styling */
+.spec-preview__markdown {
+  line-height: 1.6;
+  color: #374151;
+}
+
+.spec-h1 {
+  color: #1e293b;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.spec-h2 {
+  color: #1e293b;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 32px 0 16px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.spec-h3 {
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 24px 0 12px 0;
+}
+
+.spec-h4 {
+  color: #374151;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 20px 0 8px 0;
+}
+
+.spec-p {
+  margin: 0 0 16px 0;
+  line-height: 1.7;
+}
+
+.spec-ul, .spec-ol {
+  margin: 0 0 16px 0;
+  padding-left: 24px;
+}
+
+.spec-li {
+  margin: 4px 0;
+  line-height: 1.6;
+}
+
+.spec-blockquote {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-left: 4px solid #3b82f6;
+  background: #f8fafc;
+  color: #475569;
+  font-style: italic;
+}
+
+.spec-code-inline {
+  background: #f1f5f9;
+  color: #1e293b;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 0.875em;
+}
+
+.spec-pre {
+  background: #1e293b;
+  color: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.spec-code-block {
+  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 0.875em;
+  line-height: 1.5;
+}
+
+.spec-table-wrapper {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e2e8f0;
+}
+
+.spec-th {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+}
+
+.spec-td {
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+}
+
+.spec-hr {
+  border: none;
+  height: 1px;
+  background: #e2e8f0;
+  margin: 24px 0;
+}
+
+.spec-link {
+  color: #3b82f6;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.spec-link:hover {
+  text-decoration-color: #3b82f6;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .spec-preview__header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .spec-preview__content {
+    padding: 16px;
+    max-height: 400px;
+  }
+  
+  .spec-h1 {
+    font-size: 1.5rem;
+  }
+  
+  .spec-h2 {
+    font-size: 1.25rem;
+    margin: 24px 0 12px 0;
+  }
+  
+  .spec-h3 {
+    font-size: 1.125rem;
+    margin: 20px 0 8px 0;
+  }
+  
+  .spec-ul, .spec-ol {
+    padding-left: 20px;
+  }
+  
+  .spec-pre {
+    padding: 12px;
+    font-size: 0.8em;
+  }
+  
+  .spec-table-wrapper {
+    font-size: 0.875em;
+  }
+  
+  .spec-th, .spec-td {
+    padding: 8px;
+  }
+}
