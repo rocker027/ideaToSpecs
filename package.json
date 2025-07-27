@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Local web application for generating product specifications from ideas using Gemini CLI",
   "main": "index.js",
+  "type": "module",
   "private": true,
   "workspaces": [
     "frontend",

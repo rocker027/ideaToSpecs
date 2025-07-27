@@ -6,9 +6,10 @@ import ProgressIndicator from './components/ProgressIndicator';
 import ConnectionStatus from './components/ConnectionStatus';
 import { ToastProvider, useToast } from './components/ToastProvider';
 import { ScreenReaderAnnouncer, SkipLinks, AccessibilitySettings, LoadingAnnouncement } from './components/AccessibilityHelper';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useGlobalKeyboardShortcuts } from './hooks/useKeyboardShortcuts.jsx';
 import { KeyboardShortcutsHelp } from './hooks/useKeyboardShortcuts.jsx';
-import { apiService, websocketService } from './services/api';
+import { apiService, websocketService, copyToClipboard } from './services/api';
 import './App.css';
 import './components/KeyboardShortcutsHelp.css';
 import './components/AccessibilityHelper.css';
@@ -32,46 +33,63 @@ function AppContent() {
 
   // Check backend health on app load
   useEffect(() => {
-    checkBackendHealth();
-    initializeWebSocket();
-    
-    // Setup online/offline listeners
-    const handleOnline = () => {
-      setIsOnline(true);
-      toast.showSuccess('Connection restored', { duration: 3000 });
+    // Wrap in try-catch to prevent crashes
+    try {
       checkBackendHealth();
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
-      toast.showWarning('You are offline', { persistent: true });
-    };
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      websocketService.cleanup();
-    };
+      initializeWebSocket();
+      
+      // Setup online/offline listeners
+      const handleOnline = () => {
+        setIsOnline(true);
+        toast.showSuccess('Connection restored', { duration: 3000 });
+        checkBackendHealth();
+      };
+      
+      const handleOffline = () => {
+        setIsOnline(false);
+        toast.showWarning('You are offline', { persistent: true });
+      };
+      
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+        try {
+          websocketService.cleanup();
+        } catch (error) {
+          console.error('Error cleaning up WebSocket:', error);
+        }
+      };
+    } catch (error) {
+      console.error('Error initializing app:', error);
+      setError('Failed to initialize application');
+    }
   }, [toast]);
   
   const initializeWebSocket = useCallback(() => {
-    websocketService.initialize();
-    
-    // Listen for WebSocket connection changes
-    const removeListener = websocketService.onConnectionChange((status) => {
-      setWsConnected(status.connected);
+    try {
+      websocketService.initialize();
       
-      if (status.connected) {
-        toast.showSuccess('Real-time connection established', { duration: 3000 });
-      } else if (status.error) {
-        toast.showWarning('Real-time connection failed, using fallback mode', { duration: 5000 });
-      }
-    });
-    
-    return removeListener;
+      // Listen for WebSocket connection changes
+      const removeListener = websocketService.onConnectionChange((status) => {
+        setWsConnected(status.connected);
+        
+        if (status.connected) {
+          toast.showSuccess('Real-time connection established', { duration: 3000 });
+        } else if (status.error) {
+          console.warn('WebSocket connection failed:', status.error);
+          toast.showWarning('Real-time connection failed, using fallback mode', { duration: 5000 });
+        }
+      });
+      
+      return removeListener;
+    } catch (error) {
+      console.error('Failed to initialize WebSocket:', error);
+      toast.showError('Failed to initialize real-time connection', { duration: 5000 });
+      return () => {}; // Return empty cleanup function
+    }
   }, [toast]);
   
   // Keyboard shortcuts setup
@@ -150,13 +168,14 @@ function AppContent() {
 
   const checkBackendHealth = useCallback(async () => {
     try {
+      setBackendStatus('checking');
       const healthData = await apiService.healthCheck();
       setBackendStatus('connected');
       
       // Show detailed health info if available
-      if (healthData.services) {
+      if (healthData?.services) {
         const unhealthyServices = Object.entries(healthData.services)
-          .filter(([, status]) => status !== 'healthy')
+          .filter(([, status]) => status !== 'healthy' && status !== 'connected' && status !== 'available')
           .map(([service]) => service);
         
         if (unhealthyServices.length > 0) {
@@ -170,14 +189,15 @@ function AppContent() {
       console.error('Backend health check failed:', err);
       setBackendStatus('disconnected');
       
-      if (isOnline) {
+      // Only show toast if we're online and the toast service is available
+      if (isOnline && toast && typeof toast.showError === 'function') {
         toast.showError(
           'Backend service is unavailable. Please try again later.',
           { 
             duration: 8000,
             actions: [{
               label: 'Retry',
-              handler: checkBackendHealth,
+              handler: () => checkBackendHealth(),
               type: 'primary'
             }]
           }
@@ -312,7 +332,6 @@ function AppContent() {
       }
       
       // Use the copyToClipboard utility from api service
-      const { copyToClipboard } = await import('./services/api');
       const success = await copyToClipboard(textToCopy);
       
       if (success) {
@@ -506,12 +525,14 @@ function AppContent() {
   );
 }
 
-// Main App component with Toast Provider
+// Main App component with Toast Provider and Error Boundary
 function App() {
   return (
-    <ToastProvider maxToasts={5}>
-      <AppContent />
-    </ToastProvider>
+    <ErrorBoundary>
+      <ToastProvider maxToasts={5}>
+        <AppContent />
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

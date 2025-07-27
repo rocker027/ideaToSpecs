@@ -304,6 +304,20 @@ export const apiService = {
         status: error.response?.status || 500
       };
     }
+  },
+
+  // Check Gemini CLI authentication status
+  checkGeminiAuth: async () => {
+    try {
+      const response = await api.get('/gemini/auth-status');
+      return response.data;
+    } catch (error) {
+      console.error('API Error - Gemini Auth Check:', error);
+      throw {
+        message: error.response?.data?.error || 'Failed to check Gemini CLI authentication',
+        status: error.response?.status || 500
+      };
+    }
   }
 };
 
@@ -331,6 +345,11 @@ export const copyToClipboard = async (text) => {
     console.error('Copy to clipboard failed:', error);
     return false;
   }
+};
+
+// Add initialize method to websocketService
+websocketService.initialize = () => {
+  return websocketService.connect();
 };
 
 // Enhanced API service with WebSocket support

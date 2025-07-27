@@ -34,6 +34,7 @@ npm run setup                 # Install dependencies and setup database
 
 # Development servers
 ./scripts/start.sh            # Start both servers with health checks
+./scripts/start-with-auth.sh  # Start with strict OAuth authentication check
 npm run dev                   # Concurrent frontend (:3000) and backend (:3001)
 npm run dev:frontend          # React dev server only
 npm run dev:backend           # Express server only
@@ -168,11 +169,30 @@ RATE_LIMIT_WINDOW=900000  # 15 minutes
 RATE_LIMIT_MAX=100
 ```
 
-### Prerequisites & Dependencies
+### Prerequisites & OAuth Configuration
 - **Node.js 18+** (tested with 18.x, 20.x)
-- **Gemini CLI** installed and configured in PATH
+- **Gemini CLI** 使用 Google OAuth 認證
+  ```bash
+  # 安裝 Gemini CLI
+  npm install -g @google/gemini-cli
+  
+  # 使用 Google 帳號登入（重要！）
+  gemini auth login
+  
+  # 確認授權狀態
+  gemini auth status
+  ```
 - **npm 9+** for workspace support
 - **Modern Browser** (Chrome 88+, Firefox 78+, Safari 14+)
+
+### OAuth 整合注意事項
+- Gemini CLI 使用 OAuth 而非 API key
+- 必須在執行 Node.js 的相同使用者環境下完成授權
+- 授權 token 儲存在使用者的 home 目錄
+- 如果遇到授權問題，請確認：
+  1. 使用相同的使用者帳號執行 `gemini auth login` 和啟動服務器
+  2. 不要使用 sudo 或不同的使用者權限
+  3. 確保 HOME 環境變數正確設置
 
 ## Production Testing & Validation
 

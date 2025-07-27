@@ -19,7 +19,19 @@
       "Bash(grep:*)",
       "Bash(ls:*)",
       "Bash(NODE_OPTIONS=\"--dns-result-order=ipv4first\" node server.js)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(./scripts/start.sh:*)",
+      "Bash(npm run setup:db:*)",
+      "Bash(gemini:*)",
+      "Bash(kill:*)",
+      "Bash(timeout:*)",
+      "Bash(touch:*)",
+      "Bash(gtimeout:*)",
+      "Bash(cat:*)",
+      "Bash(env)",
+      "Bash(sqlite3:*)",
+      "Bash(command:*)",
+      "Bash(time gemini:*)"
     ],
     "deny": []
   }

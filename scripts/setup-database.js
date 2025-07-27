@@ -17,8 +17,9 @@ async function setupDatabase() {
     console.log('Setting up database...');
     
     // Create database client (local SQLite by default)
+    const dbPath = path.join(__dirname, '..', 'database', 'local.db');
     const db = createClient({
-      url: 'file:../database/local.db'
+      url: `file:${dbPath}`
     });
     
     // Create tables
