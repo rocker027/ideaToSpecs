@@ -6,6 +6,9 @@
 ![Node.js](https://img.shields.io/badge/Node.js-18+-blue)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
+<img width="1653" height="1246" alt="CleanShot 2025-07-28 at 20 40 20" src="https://github.com/user-attachments/assets/bb9f55df-5f21-4bc6-bc5a-ca326cf5fb71" />
+
+
 ## 專案簡介
 
 Idea-to-Specs Generator 是一個功能完整的本地網頁應用程式，透過整合 Gemini CLI 將使用者的創意想法轉換為詳細的產品開發規格文件。該應用程式採用現代化的 React 前端搭配強大的 Express.js 後端，支援即時進度追蹤和 WebSocket 通訊，並使用 Turso 資料庫進行資料持久化。
