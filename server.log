@@ -1,0 +1,83 @@
+
+> idea-to-specs@1.0.0 start:production
+> ./scripts/start-production.sh
+
+🚀 Starting Idea-to-Specs Generator (Production Mode)...
+✅ Node.js version 20.19.4 detected
+🗄️  Initializing database...
+
+> idea-to-specs@1.0.0 setup:db
+> node scripts/setup-database.js
+
+Setting up database...
+✅ Database setup completed successfully
+📁 Local database created at: database/local.db
+📝 Sample data inserted for testing
+
+🎉 Starting application in production mode...
+   Backend: http://localhost:3001
+   Frontend: http://localhost:3000
+
+📋 To stop the application, press Ctrl+C
+
+
+> idea-to-specs@1.0.0 start
+> concurrently "npm run start:backend" "npm run start:frontend"
+
+[0] 
+[0] > idea-to-specs@1.0.0 start:backend
+[0] > npm start --workspace=backend
+[0] 
+[1] 
+[1] > idea-to-specs@1.0.0 start:frontend
+[1] > npm run preview --workspace=frontend
+[1] 
+[1] 
+[1] > frontend@0.0.0 preview
+[1] > vite preview --port 3000
+[1] 
+[0] 
+[0] > backend@1.0.0 start
+[0] > node server.js
+[0] 
+[1]   ➜  Local:   http://localhost:3000/
+[1]   ➜  Network: http://127.50.100.1:3000/
+[1]   ➜  Network: http://192.168.68.55:3000/
+[0] Database initialized successfully with enhanced schema
+[0] {"level":30,"time":1753599733501,"pid":31901,"hostname":"yelinfudebijixingdiannao.local","port":"3001","environment":"production","version":"1.0.0","msg":"Backend server started successfully"}
+[0] 
+[0] 🚀 Backend server running on http://localhost:3001
+[0] 📚 API documentation: http://localhost:3001/api/docs
+[0] ❤️  Health check: http://localhost:3001/api/health
+[0] 📊 Status monitor: http://localhost:3001/status
+[0] 🔌 WebSocket support: ws://localhost:3001/socket.io
+[0] 🌍 Environment: production
+[0] 
+[0] Available endpoints:
+[0]   POST   /api/generate        - Generate specification (with WebSocket updates)
+[0]   GET    /api/history         - Get history (paginated)
+[0]   GET    /api/spec/:id        - Get specific spec
+[0]   GET    /api/download/:id     - Download as Markdown
+[0]   DELETE /api/history/:id     - Delete entry
+[0]   GET    /api/health          - Comprehensive health check
+[0]   GET    /api/gemini/health   - Gemini CLI health check
+[0]   GET    /api/job/:id/status  - Get job status (polling fallback)
+[0]   GET    /api/docs            - API documentation
+[0]   GET    /status              - System monitoring dashboard
+[0] 
+[0] {"level":30,"time":1753599746840,"pid":31901,"hostname":"yelinfudebijixingdiannao.local","method":"GET","path":"/api/health","statusCode":200,"duration":"8480ms","userAgent":"curl/8.7.1","ip":"127.0.0.1","responseSize":454,"msg":"HTTP Request"}
+[0] 127.0.0.1 - - [27/Jul/2025:07:02:26 +0000] "GET /api/health HTTP/1.1" 200 454 "-" "curl/8.7.1"
+[1] npm error Lifecycle script `preview` failed with error:
+[1] npm error code 143
+[1] npm error path /Users/rocker/Documents/ai/ideaToSpecs/frontend
+[1] npm error workspace frontend@0.0.0
+[1] npm error location /Users/rocker/Documents/ai/ideaToSpecs/frontend
+[1] npm error command failed
+[1] npm error command sh -c vite preview --port 3000
+[1] npm run start:frontend exited with code 143
+[0] {"level":30,"time":1753599805430,"pid":31901,"hostname":"yelinfudebijixingdiannao.local","signal":"SIGTERM","msg":"Received shutdown signal, closing server gracefully"}
+[0] {"level":30,"time":1753599805430,"pid":31901,"hostname":"yelinfudebijixingdiannao.local","msg":"HTTP server closed"}
+[0] {"level":30,"time":1753599805430,"pid":31901,"hostname":"yelinfudebijixingdiannao.local","msg":"Socket.IO server closed"}
+[0] {"level":30,"time":1753599805430,"pid":31901,"hostname":"yelinfudebijixingdiannao.local","msg":"Database connections cleaned up"}
+[0] {"level":30,"time":1753599805430,"pid":31901,"hostname":"yelinfudebijixingdiannao.local","msg":"Graceful shutdown completed"}
+[0] npm run start:backend exited with code 0

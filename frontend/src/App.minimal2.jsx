@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import AuthStatus from './components/AuthStatus';
+import { SecureMarkdown } from './components/SecureMarkdown.jsx';
+import AuthProvider, { useAuth } from './components/AuthProvider.jsx';
+import LoginModal from './components/LoginModal.jsx';
 
-// Enhanced version with more features
-function App() {
+// 內部應用組件（具有身份驗證功能）
+function AppContent() {
+  const { user, isLoading, apiRequest } = useAuth();
   const [idea, setIdea] = useState('');
   const [message, setMessage] = useState('Application loaded successfully!');
   const [generatedSpec, setGeneratedSpec] = useState('');
@@ -20,11 +24,8 @@ function App() {
     setGeneratedSpec('');
     
     try {
-      const response = await fetch('http://localhost:3001/api/generate', {
+      const response = await apiRequest('http://localhost:3001/api/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ idea: idea.trim() })
       });
 
@@ -139,10 +140,34 @@ function App() {
         marginBottom: '2rem',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
-        <h1 style={{ margin: 0, color: '#333' }}>Idea-to-Specs Generator</h1>
-        <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
-          Transform your ideas into specifications
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ margin: 0, color: '#333' }}>Idea-to-Specs Generator</h1>
+            <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
+              Transform your ideas into specifications
+            </p>
+          </div>
+          {user && (
+            <div style={{ 
+              fontSize: '0.9rem', 
+              color: '#666',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <span>👤 {user.username}</span>
+              <span style={{ 
+                backgroundColor: user.role === 'admin' ? '#10b981' : '#6b7280',
+                color: 'white',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '3px',
+                fontSize: '0.8rem'
+              }}>
+                {user.role}
+              </span>
+            </div>
+          )}
+        </div>
       </header>
 
       <main style={{ 
@@ -360,15 +385,18 @@ function App() {
             {/* Specification content */}
             <div style={{
               padding: '1.5rem',
-              whiteSpace: 'pre-wrap',
-              lineHeight: '1.6',
-              fontFamily: 'Monaco, "Lucida Console", monospace',
-              fontSize: '0.9rem',
               maxHeight: '400px',
               overflowY: 'auto',
               backgroundColor: '#fafafa'
             }}>
-              {generatedSpec}
+              <SecureMarkdown 
+                content={generatedSpec}
+                style={{
+                  fontFamily: 'Monaco, "Lucida Console", monospace',
+                  fontSize: '0.9rem'
+                }}
+                allowHtml={false}
+              />
             </div>
           </div>
         )}
@@ -389,6 +417,15 @@ function App() {
         </footer>
       </main>
     </div>
+  );
+}
+
+// 主要的 App 組件，包含身份驗證提供者
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

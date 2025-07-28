@@ -12,6 +12,33 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import os from 'os';
 import dotenv from 'dotenv';
+
+// 安全模組導入
+import {
+  validateAndSanitizeInput,
+  validateSearchInput,
+  validateNumericParam,
+  validateId,
+  sanitizeString,
+  validateFilename
+} from './utils/validators.js';
+
+import {
+  generateWithGeminiSafe,
+  checkGeminiAvailability,
+  testGeminiBasicFunction,
+  formatSpecification
+} from './utils/geminiSafe.js';
+
+// 身份驗證中間件導入
+import {
+  requireAuth,
+  optionalAuth,
+  handleLogin,
+  handleLogout,
+  handleUserInfo,
+  LOCAL_AUTH_CONFIG
+} from './middleware/auth.js';
 import { createClient } from '@libsql/client';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
@@ -41,7 +68,7 @@ const logger = pino({
   } : undefined
 });
 
-// Socket.IO setup for real-time communication
+// Socket.IO setup for real-time communication with security enhancements
 const io = new SocketIOServer(server, {
   cors: {
     origin: NODE_ENV === 'development' 
@@ -49,31 +76,124 @@ const io = new SocketIOServer(server, {
       : process.env.ALLOWED_ORIGINS?.split(',') || false,
     credentials: true
   },
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
+  // 安全配置
+  allowEIO3: false, // 禁用舊版本支援
+  maxHttpBufferSize: 1e6, // 1MB 限制
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
-// Connection tracking
+// Connection tracking and rate limiting
 const activeConnections = new Map();
 const processingJobs = new Map();
+const socketRateLimit = new Map();
+
+// WebSocket 身份驗證中間件
+io.use(async (socket, next) => {
+  try {
+    const sessionId = socket.handshake.auth.sessionId || socket.handshake.headers['x-session-id'];
+    const clientIP = socket.handshake.address;
+    
+    // 檢查是否為本地 IP（允許無身份驗證）
+    if (isLocalIP(clientIP)) {
+      socket.user = { id: 'local-dev', role: 'local', permissions: ['*'] };
+      return next();
+    }
+    
+    // 驗證 session
+    if (sessionId && validateSession(sessionId)) {
+      const session = getSession(sessionId);
+      socket.user = session.user;
+      socket.sessionId = sessionId;
+    } else {
+      return next(new Error('WebSocket 身份驗證失敗'));
+    }
+    
+    next();
+  } catch (error) {
+    next(new Error('WebSocket 身份驗證錯誤'));
+  }
+});
+
+// WebSocket 速率限制中間件
+io.use((socket, next) => {
+  const clientIP = socket.handshake.address;
+  const now = Date.now();
+  
+  if (!socketRateLimit.has(clientIP)) {
+    socketRateLimit.set(clientIP, { count: 0, resetTime: now + 60000 }); // 1分鐘窗口
+  }
+  
+  const limit = socketRateLimit.get(clientIP);
+  
+  if (now > limit.resetTime) {
+    limit.count = 0;
+    limit.resetTime = now + 60000;
+  }
+  
+  if (limit.count >= 100) { // 每分鐘100個連接
+    return next(new Error('WebSocket 連接速率限制'));
+  }
+  
+  limit.count++;
+  next();
+});
 
 // Socket.IO event handlers
 io.on('connection', (socket) => {
-  logger.info({ socketId: socket.id }, 'WebSocket client connected');
+  logger.info({ socketId: socket.id, user: socket.user?.id }, 'WebSocket client connected');
   activeConnections.set(socket.id, socket);
   
-  // Handle job subscription
+  // 為每個 socket 創建事件速率限制
+  const eventRateLimit = new Map();
+  
+  // 事件速率限制函數
+  const checkEventRateLimit = (eventName, limit = 50, window = 60000) => {
+    const now = Date.now();
+    const key = `${socket.id}-${eventName}`;
+    
+    if (!eventRateLimit.has(key)) {
+      eventRateLimit.set(key, { count: 0, resetTime: now + window });
+    }
+    
+    const eventLimit = eventRateLimit.get(key);
+    
+    if (now > eventLimit.resetTime) {
+      eventLimit.count = 0;
+      eventLimit.resetTime = now + window;
+    }
+    
+    if (eventLimit.count >= limit) {
+      logger.warn({ socketId: socket.id, eventName, count: eventLimit.count }, 'Socket event rate limit exceeded');
+      return false;
+    }
+    
+    eventLimit.count++;
+    return true;
+  };
+  
+  // Handle job subscription with rate limiting
   socket.on('subscribe-job', (jobId) => {
+    if (!checkEventRateLimit('subscribe-job', 10, 60000)) { // 每分鐘最多10次
+      return;
+    }
+    
     if (typeof jobId === 'string' && jobId.length > 0) {
       socket.join(`job-${jobId}`);
-      logger.debug({ socketId: socket.id, jobId }, 'Client subscribed to job updates');
+      logger.debug({ socketId: socket.id, jobId, user: socket.user?.id }, 'Client subscribed to job updates');
     }
   });
   
-  // Handle job unsubscription
+  // Handle job unsubscription with rate limiting
   socket.on('unsubscribe-job', (jobId) => {
+    if (!checkEventRateLimit('unsubscribe-job', 10, 60000)) { // 每分鐘最多10次
+      return;
+    }
+    
     if (typeof jobId === 'string' && jobId.length > 0) {
       socket.leave(`job-${jobId}`);
-      logger.debug({ socketId: socket.id, jobId }, 'Client unsubscribed from job updates');
+      logger.debug({ socketId: socket.id, jobId, user: socket.user?.id }, 'Client unsubscribed from job updates');
     }
   });
   
@@ -159,16 +279,48 @@ const generateLimiter = rateLimit({
   }
 });
 
-// Security middleware
+// Enhanced Security middleware
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"], // 允許內聯樣式（React開發需要）
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "ws:", "wss:"], // WebSocket支持
+      fontSrc: ["'self'", "https:", "data:"],
+      objectSrc: ["'none'"], // 禁止object/embed
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"], // 禁止frame
+      childSrc: ["'none'"], // 禁止子框架
+      formAction: ["'self'"], // 限制表單提交
+      baseUri: ["'self'"], // 限制base URI
+      upgradeInsecureRequests: NODE_ENV === 'production' ? [] : null
     },
+    // 在開發模式下放寬限制
+    ...(NODE_ENV === 'development' && {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-eval'"], // 開發模式允許eval
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        connectSrc: ["'self'", "ws:", "wss:", "http:", "https:"],
+        fontSrc: ["'self'", "https:", "data:"]
+      }
+    })
   },
+  crossOriginEmbedderPolicy: NODE_ENV === 'production',
+  hsts: {
+    maxAge: 31536000, // 1年
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  frameguard: { action: 'deny' },
+  xssFilter: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  // 隱藏服務器信息
+  hidePoweredBy: true
 }));
 
 // CORS configuration
@@ -179,6 +331,36 @@ app.use(cors({
   credentials: true,
   optionsSuccessStatus: 200
 }));
+
+// 額外的安全標頭
+app.use((req, res, next) => {
+  // 防止 MIME 類型嗅探
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  
+  // 防止頁面被嵌入到 iframe
+  res.setHeader('X-Frame-Options', 'DENY');
+  
+  // 啟用瀏覽器的 XSS 過濾器
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // 權限策略（限制瀏覽器功能）
+  res.setHeader('Permissions-Policy', 
+    'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  
+  // 防止 DNS 預取洩漏
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  
+  // 防止下載文件時的安全問題
+  res.setHeader('X-Download-Options', 'noopen');
+  
+  // 僅在生產環境中啟用 HSTS
+  if (NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 
+      'max-age=31536000; includeSubDomains; preload');
+  }
+  
+  next();
+});
 
 // General middleware
 app.use(compression());
@@ -590,30 +772,18 @@ async function generateSpecWithGemini(idea, options = {}) {
   }
 }
 
-// Format generated specification for better markdown output
-function formatSpecification(rawSpec, userInput) {
-  const timestamp = new Date().toISOString();
-  const formattedSpec = `# Product Development Specification
-
-**Generated:** ${timestamp}
-**Original Idea:** ${userInput}
-
----
-
-${rawSpec}
-
----
-
-*Generated using Gemini CLI integration*`;
-  
-  return formattedSpec;
-}
 
 // API Routes
+
+// 身份驗證相關路由
+app.post('/api/auth/login', handleLogin);
+app.post('/api/auth/logout', optionalAuth, handleLogout);
+app.get('/api/auth/user', requireAuth({ skipLocal: true }), handleUserInfo);
 
 // Generate specification from idea
 app.post('/api/generate', 
   generateLimiter,
+  optionalAuth, // 使用可選身份驗證（本地開發友好）
   validateRequest(schemas.generateIdea),
   async (req, res, next) => {
     const startTime = Date.now();
@@ -647,17 +817,40 @@ app.post('/api/generate',
       console.log('🚀 Generating specification using Gemini CLI...');
       emitJobUpdate(jobId, 'processing', { message: 'Calling Gemini CLI...' });
       
-      const result = await generateSpecWithGemini(idea, {
-        timeout: 120000, // 2 minutes timeout for Gemini CLI
+      // 使用安全的 Gemini CLI 整合
+      const rawOutput = await generateWithGeminiSafe(idea, {
+        timeout: 180000, // 3 minutes timeout for complex generation
         maxRetries: 2,   // Increased retries for better reliability
         retryDelay: 2000, // Increased delay between retries
-        jobId: jobId    // Pass job ID for WebSocket updates
+        jobId: jobId,    // Pass job ID for WebSocket updates
+        emitJobUpdate: emitJobUpdate // Pass emit function for progress updates
       });
       
       console.log('✅ Successfully generated spec using Gemini CLI');
       emitJobUpdate(jobId, 'processing', { message: 'Formatting specification...' });
       
-      const formattedSpec = formatSpecification(result.output, idea);
+      // 嘗試格式化，如果失敗則使用錯誤恢復機制
+      let formattedSpec;
+      try {
+        formattedSpec = formatSpecification(rawOutput, idea);
+      } catch (formatError) {
+        console.warn('格式化失敗，使用錯誤恢復機制:', formatError.message);
+        emitJobUpdate(jobId, 'processing', { message: '格式化失敗，使用備用格式...' });
+        
+        // 錯誤恢復：使用基本格式包裝原始輸出
+        formattedSpec = `# ${idea} - 產品規格文件
+
+**Generated:** ${new Date().toISOString()}
+**Status:** 使用備用格式（原始輸出處理）
+
+---
+
+${rawOutput || '生成內容處理時發生問題，請重新嘗試。'}
+
+---
+
+*Generated using Gemini CLI with error recovery*`;
+      }
       const totalDuration = Date.now() - startTime;
       
       // Update database record with results
@@ -666,15 +859,13 @@ app.post('/api/generate',
         args: [formattedSpec, 'completed', totalDuration, recordId]
       });
       
-      console.log(`Spec generation completed in ${totalDuration}ms (Gemini: ${result.duration}ms)`);
+      console.log(`Spec generation completed in ${totalDuration}ms`);
       
       // Emit successful completion via WebSocket
       emitJobUpdate(jobId, 'completed', { 
         message: '🎉 規格文檔生成完成！',
         totalDuration: Number(totalDuration),
-        geminiDuration: Number(result.duration),
-        outputLength: Number(formattedSpec.length),
-        attempt: Number(result.attempt)
+        outputLength: Number(formattedSpec.length)
       });
       
       res.json({
@@ -756,18 +947,27 @@ app.get('/api/history-test', async (req, res) => {
 
 // Get history with pagination and search
 app.get('/api/history', 
+  optionalAuth, // 可選身份驗證
   validateRequest(schemas.historyQuery),
   async (req, res, next) => {
     try {
       console.log('History API - validatedData:', req.validatedData);
       const { page = 1, limit = 20, search = '' } = req.validatedData || req.query;
-      const offset = (page - 1) * limit;
       
-      console.log('History API - parsed params:', { page, limit, search, offset });
+      // 使用安全的參數驗證
+      const pageNum = validateNumericParam(page, { min: 1, max: 1000, defaultValue: 1 });
+      const limitNum = validateNumericParam(limit, { min: 1, max: 100, defaultValue: 20 });
+      const offset = (pageNum - 1) * limitNum;
       
-      // Ensure parameters are numbers
-      const limitNum = parseInt(limit, 10);
-      const offsetNum = parseInt(offset, 10);
+      // 安全驗證搜尋參數
+      const sanitizedSearch = search ? validateSearchInput(search) : null;
+      
+      console.log('History API - parsed params:', { 
+        page: pageNum, 
+        limit: limitNum, 
+        search: sanitizedSearch, 
+        offset 
+      });
       
       console.log('History API - executing count query...');
       // First, try a simple count query to test database connection
@@ -781,31 +981,31 @@ app.get('/api/history',
         return res.json({
           data: [],
           pagination: {
-            page,
+            page: pageNum,
             limit: limitNum,
             total: 0,
             totalPages: 0,
             hasNext: false,
             hasPrev: false
           },
-          search: search || null
+          search: sanitizedSearch || null
         });
       }
       
-      // Simple query for data
+      // Simple query for data with secure parameters
       let query = 'SELECT id, user_input, generated_spec, status, processing_time_ms, created_at, updated_at FROM ideas';
       let queryParams = [];
       
-      // Add search functionality
-      if (search) {
+      // Add search functionality with secure parameters
+      if (sanitizedSearch) {
         query += ' WHERE user_input LIKE ? OR generated_spec LIKE ?';
-        const searchParam = `%${search}%`;
+        const searchParam = `%${sanitizedSearch}%`;
         queryParams.push(searchParam, searchParam);
       }
       
       // Add ordering and pagination
       query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-      queryParams.push(limitNum, offsetNum);
+      queryParams.push(limitNum, offset);
       
       // Execute query
       const dataResult = await db.execute({
@@ -825,14 +1025,14 @@ app.get('/api/history',
       res.json({
         data: processedData,
         pagination: {
-          page,
+          page: pageNum,
           limit: limitNum,
           total,
           totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
+          hasNext: pageNum < totalPages,
+          hasPrev: pageNum > 1
         },
-        search: search || null
+        search: sanitizedSearch || null
       });
       
     } catch (error) {
@@ -923,9 +1123,12 @@ app.get('/api/spec/:id',
     try {
       const { id } = req.params;
       
+      // 使用安全的 ID 驗證
+      const validId = validateId(id);
+      
       const result = await db.execute({
         sql: 'SELECT * FROM ideas WHERE id = ?',
-        args: [id]
+        args: [validId]
       });
       
       if (result.rows.length === 0) {
@@ -956,6 +1159,7 @@ app.get('/api/spec/:id',
 
 // Delete specific entry with confirmation
 app.delete('/api/history/:id', 
+  requireAuth({ skipLocal: true, requirePermission: 'delete' }), // 需要刪除權限
   param('id').isInt({ min: 1 }).withMessage('Invalid ID'),
   (req, res, next) => {
     const errors = validationResult(req);

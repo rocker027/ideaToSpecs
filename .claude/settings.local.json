@@ -31,7 +31,8 @@
       "Bash(env)",
       "Bash(sqlite3:*)",
       "Bash(command:*)",
-      "Bash(time gemini:*)"
+      "Bash(time gemini:*)",
+      "Bash(npm run validate:*)"
     ],
     "deny": []
   }
