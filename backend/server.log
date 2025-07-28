@@ -1,0 +1,63 @@
+{"level":30,"time":1753687928040,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","duration":0,"attempt":1,"msg":"Database connection test successful"}
+{"level":30,"time":1753687928041,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","msg":"Database tables created successfully"}
+{"level":30,"time":1753687928041,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","createdCount":14,"duration":0,"msg":"Database indexes created successfully"}
+{"level":30,"time":1753687928041,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","msg":"Prepared 6 critical statements"}
+{"level":30,"time":1753687928042,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","msg":"Performance monitoring initialized"}
+{"level":30,"time":1753687928042,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","msg":"Database initialized successfully with performance optimizations"}
+[2025-07-28 15:32:08.039 +0800] [32mINFO[39m: [36mInitializing services...[39m
+[2025-07-28 15:32:08.042 +0800] [32mINFO[39m: [36mDatabase service initialized[39m
+✅ Gemini CLI 執行成功 (4590ms)
+{"level":30,"time":1753687932642,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","available":true,"configured":true,"msg":"Gemini service initialized"}
+{"level":30,"time":1753687932645,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","msg":"WebSocket service initialized with memory leak protection"}
+
+🚀 Idea-to-Specs Server started successfully!
+📍 Server: http://0.0.0.0:3001
+📚 API Docs: http://0.0.0.0:3001/api/docs
+❤️  Health: http://0.0.0.0:3001/api/health
+📊 Monitor: http://0.0.0.0:3001/status
+🔌 WebSocket: ws://0.0.0.0:3001/socket.io
+🌍 Environment: development
+🆔 Process ID: 92669
+
+📋 Available API Endpoints:
+  POST   /api/generate          - Generate specification (with WebSocket updates)
+  GET    /api/history           - Get paginated history
+  GET    /api/spec/:id          - Get specific specification
+  GET    /api/download/:id      - Download as Markdown
+  DELETE /api/history/:id       - Delete entry
+  GET    /api/health            - Comprehensive health check
+  GET    /api/gemini/health     - Gemini CLI health check
+  GET    /api/docs              - API documentation
+  GET    /status                - System monitoring dashboard
+
+[2025-07-28 15:32:12.642 +0800] [32mINFO[39m: [36mGemini service initialized[39m
+[2025-07-28 15:32:12.642 +0800] [32mINFO[39m: [36mAll services initialized successfully[39m
+[2025-07-28 15:32:12.645 +0800] [32mINFO[39m: [36mServer initialized successfully[39m
+[2025-07-28 15:32:12.648 +0800] [32mINFO[39m: [36mServer started successfully[39m
+    port: "3001"
+    host: "0.0.0.0"
+    environment: "development"
+    version: "1.0.0"
+    nodeVersion: "v20.19.4"
+[2025-07-28 15:32:29.161 +0800] [32mINFO[39m: [36mRequest started[39m
+    method: "GET"
+    path: "/api/health"
+    ip: "127.0.0.1"
+    userAgent: "node"
+✅ Gemini CLI 執行成功 (4638ms)
+[0mGET /api/health [32m200[0m 4989.320 ms - 696[0m
+[2025-07-28 15:32:34.149 +0800] [32mINFO[39m: [36mHTTP Request Completed[39m
+    method: "GET"
+    path: "/health"
+    statusCode: 200
+    duration: "4988ms"
+    responseSize: "1KB"
+    userAgent: "node"
+    ip: "127.0.0.1"
+{"level":30,"time":1753687970983,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","msg":"Initiating WebSocket service shutdown"}
+[2025-07-28 15:32:50.983 +0800] [32mINFO[39m: [36mReceived shutdown signal, starting graceful shutdown[39m
+    signal: "SIGTERM"
+[2025-07-28 15:32:50.983 +0800] [32mINFO[39m: [36mHTTP server closed[39m
+{"level":30,"time":1753687971985,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","msg":"WebSocket server closed"}
+{"level":30,"time":1753687971985,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","msg":"Database connection closed"}
+{"level":30,"time":1753687971985,"pid":92669,"hostname":"yelinfudebijixingdiannao.local","msg":"WebSocket service shutdown completed"}

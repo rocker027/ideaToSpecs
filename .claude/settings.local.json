@@ -32,8 +32,28 @@
       "Bash(sqlite3:*)",
       "Bash(command:*)",
       "Bash(time gemini:*)",
-      "Bash(npm run validate:*)"
+      "Bash(npm run validate:*)",
+      "Bash(cp:*)",
+      "Bash(PORT=3011 npm test)",
+      "Bash(npm test)",
+      "Bash(rm:*)",
+      "Bash(DATABASE_URL=\"file:../database/local.db\" node test-db-performance.js)",
+      "Bash(NODE_ENV=development node test-websocket-memory.js)",
+      "Bash(npm ls:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date)] $CLAUDE_TOOL_COMMAND\" >> ./executed_commands.log"
+          }
+        ]
+      }
+    ]
   }
 }
