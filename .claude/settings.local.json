@@ -41,7 +41,8 @@
       "Bash(NODE_ENV=development node test-websocket-memory.js)",
       "Bash(npm ls:*)",
       "Bash(bash:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   },
