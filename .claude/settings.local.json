@@ -39,7 +39,9 @@
       "Bash(rm:*)",
       "Bash(DATABASE_URL=\"file:../database/local.db\" node test-db-performance.js)",
       "Bash(NODE_ENV=development node test-websocket-memory.js)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(bash:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   },

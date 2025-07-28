@@ -107,7 +107,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
     }
     
     // 基本的 SQL 注入防護
-    const dangerousChars = /[';"\\]|--|/\*|\*/|xp_|sp_/i;
+    const dangerousChars = /[';"\\]|--|\/\*|\*\/|xp_|sp_/i;
     if (dangerousChars.test(username) || dangerousChars.test(password)) {
       setError('輸入包含非法字元');
       return false;

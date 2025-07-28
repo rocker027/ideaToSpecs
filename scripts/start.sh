@@ -122,9 +122,39 @@ if [ ! -d "backend/node_modules" ]; then
     cd backend && npm install && cd ..
 fi
 
+# Check if concurrently is available
+if ! npm list concurrently &> /dev/null; then
+    echo "⚠️  Installing concurrently for parallel execution..."
+    npm install concurrently --save-dev
+fi
+
 # Setup database
 echo "🗄️  Setting up database..."
 npm run setup:db
+
+# Function to handle cleanup on exit
+cleanup() {
+    echo ""
+    echo "🛑 Shutting down servers..."
+    
+    # Kill any processes using our ports
+    local ports=(3000 3001)
+    for port in "${ports[@]}"; do
+        local pids=$(lsof -ti:$port 2>/dev/null)
+        if [ -n "$pids" ]; then
+            echo "   Stopping processes on port $port..."
+            for pid in $pids; do
+                kill -TERM $pid 2>/dev/null || kill -KILL $pid 2>/dev/null
+            done
+        fi
+    done
+    
+    echo "✅ Servers stopped successfully"
+    exit 0
+}
+
+# Set up signal handlers for clean shutdown
+trap cleanup SIGINT SIGTERM
 
 # Start the application
 echo "🌐 Starting both frontend and backend servers..."
