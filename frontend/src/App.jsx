@@ -234,10 +234,6 @@ function SimpleApp() {
                   >
                     {loading ? 'Generating...' : 'Generate Specification'}
                   </Button>
-                  {/* Debug info */}
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-                    Debug: API={apiStatus}, Loading={loading.toString()}, HasIdea={Boolean(idea.trim()).toString()}
-                  </div>
                 </div>
               </form>
             </div>
