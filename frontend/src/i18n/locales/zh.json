@@ -1,0 +1,42 @@
+{
+  "app": {
+    "title": "產品規格生成器",
+    "subtitle": "將您的想法轉換為詳細的產品開發規格"
+  },
+  "form": {
+    "inputTitle": "輸入您的產品想法",
+    "inputDescription": "描述您的概念、功能或產品願景。您提供的細節越多，生成的規格就會越好。",
+    "placeholder": "例如：我想建立一個行動應用程式，幫助使用者追蹤每日飲水量、設定提醒，並視覺化他們的水分補充進度...",
+    "generateButton": "生成規格",
+    "generating": "生成中..."
+  },
+  "specification": {
+    "title": "生成的規格",
+    "placeholder": "您生成的規格將會出現在這裡",
+    "copyButton": "複製",
+    "downloadButton": "下載"
+  },
+  "status": {
+    "checking": "檢查API中...",
+    "connected": "API已連接",
+    "disconnected": "API已斷線"
+  },
+  "messages": {
+    "specCopied": "規格已複製到剪貼簿！",
+    "specDownloaded": "規格已下載為 {{filename}}",
+    "specGenerated": "規格生成成功！",
+    "enterIdea": "請輸入想法",
+    "ideaTooShort": "請提供更詳細的想法（至少10個字元）",
+    "apiNotAvailable": "API服務目前無法使用。請稍後再試。",
+    "downloadFailed": "下載規格失敗",
+    "connectionError": "無法連接到伺服器。請檢查您的連線。",
+    "serverError": "伺服器發生問題。請稍後再試。",
+    "generateFailed": "生成規格失敗",
+    "invalidResponse": "伺服器回應無效的JSON格式"
+  },
+  "language": {
+    "switch": "語言切換",
+    "chinese": "中文",
+    "english": "English"
+  }
+}

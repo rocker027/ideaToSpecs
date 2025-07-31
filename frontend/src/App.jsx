@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useTranslation } from 'react-i18next';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider, useToast } from './components/ToastProvider';
 import Button from './components/ui/Button';
 import TextField from './components/ui/TextField';
 import Card from './components/ui/Card';
+import LanguageSwitch from './components/LanguageSwitch';
 import './App.css';
 
 // Simple working version
@@ -14,12 +16,13 @@ function SimpleApp() {
   const [loading, setLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState('checking'); // checking, connected, disconnected
   const toast = useToast();
+  const { t } = useTranslation();
 
   // 複製到剪貼簿功能
   const handleCopyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(spec);
-      toast.showSuccess('Specification copied to clipboard!');
+      toast.showSuccess(t('messages.specCopied'));
     } catch (err) {
       // 備用方案：使用 textarea 複製
       const textArea = document.createElement('textarea');
@@ -28,7 +31,7 @@ function SimpleApp() {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      toast.showSuccess('Specification copied to clipboard!');
+      toast.showSuccess(t('messages.specCopied'));
     }
   };
 
@@ -51,10 +54,10 @@ function SimpleApp() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      toast.showSuccess(`Specification downloaded as ${filename}`);
+      toast.showSuccess(t('messages.specDownloaded', { filename }));
     } catch (error) {
       console.error('Download failed:', error);
-      toast.showError('Failed to download specification');
+      toast.showError(t('messages.downloadFailed'));
     }
   };
 
@@ -97,17 +100,17 @@ function SimpleApp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!idea.trim()) {
-      toast.showWarning('Please enter an idea');
+      toast.showWarning(t('messages.enterIdea'));
       return;
     }
 
     if (idea.trim().length < 10) {
-      toast.showWarning('Please provide a more detailed idea (at least 10 characters)');
+      toast.showWarning(t('messages.ideaTooShort'));
       return;
     }
 
     if (apiStatus === 'disconnected') {
-      toast.showError('API service is not available. Please try again later.');
+      toast.showError(t('messages.apiNotAvailable'));
       return;
     }
 
@@ -148,17 +151,17 @@ function SimpleApp() {
       } catch (parseError) {
         console.error('Failed to parse success response as JSON:', parseError);
         console.error('Response text:', responseText);
-        throw new Error('Invalid JSON response from server');
+        throw new Error(t('messages.invalidResponse'));
       }
       
       console.log('Parsed data keys:', Object.keys(data));
       
       if (data.generatedSpec) {
         setSpec(data.generatedSpec);
-        toast.showSuccess('Specification generated successfully!');
+        toast.showSuccess(t('messages.specGenerated'));
       } else if (data.specification) {
         setSpec(data.specification);
-        toast.showSuccess('Specification generated successfully!');
+        toast.showSuccess(t('messages.specGenerated'));
       } else {
         console.error('Response data:', data);
         throw new Error('No specification received from server');
@@ -166,12 +169,12 @@ function SimpleApp() {
     } catch (error) {
       console.error('Error generating specification:', error);
       
-      let errorMessage = 'Failed to generate specification';
+      let errorMessage = t('messages.generateFailed');
       
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        errorMessage = 'Unable to connect to server. Please check your connection.';
+        errorMessage = t('messages.connectionError');
       } else if (error.message.includes('Server error: 5')) {
-        errorMessage = 'Server is experiencing issues. Please try again later.';
+        errorMessage = t('messages.serverError');
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -188,18 +191,19 @@ function SimpleApp() {
       <header className="app__header">
         <div className="app__header-content">
           <div className="app__title-section">
-            <h1 className="app__title">Idea-to-Specs Generator</h1>
+            <h1 className="app__title">{t('app.title')}</h1>
             <p className="app__subtitle">
-              Transform your ideas into detailed product specifications
+              {t('app.subtitle')}
             </p>
           </div>
           
           <div className="app__status">
             <div className={`app__status-indicator app__status-indicator--${apiStatus}`}>
-              {apiStatus === 'checking' && 'Checking API...'}
-              {apiStatus === 'connected' && 'API Connected'}
-              {apiStatus === 'disconnected' && 'API Disconnected'}
+              {apiStatus === 'checking' && t('status.checking')}
+              {apiStatus === 'connected' && t('status.connected')}
+              {apiStatus === 'disconnected' && t('status.disconnected')}
             </div>
+            <LanguageSwitch />
           </div>
         </div>
       </header>
@@ -208,15 +212,15 @@ function SimpleApp() {
         <div className="app__content">
           <Card variant="elevated" className="app__input-card">
             <div className="md-card__content">
-              <h3 className="md-card__title">Enter Your Product Idea</h3>
+              <h3 className="md-card__title">{t('form.inputTitle')}</h3>
               <p className="md-card__description">
-                Describe your concept, feature, or product vision. The more details you provide, the better the specification will be.
+                {t('form.inputDescription')}
               </p>
               <form onSubmit={handleSubmit}>
                 <TextField
                   value={idea}
                   onChange={(e) => setIdea(e.target.value)}
-                  placeholder="Example: I want to build a mobile app that helps users track their daily water intake, set reminders, and visualize their hydration progress over time..."
+                  placeholder={t('form.placeholder')}
                   multiline
                   rows={4}
                   disabled={loading}
@@ -232,7 +236,7 @@ function SimpleApp() {
                       console.log('Button clicked - states:', { loading, idea: idea.trim(), apiStatus });
                     }}
                   >
-                    {loading ? 'Generating...' : 'Generate Specification'}
+                    {loading ? t('form.generating') : t('form.generateButton')}
                   </Button>
                 </div>
               </form>
@@ -242,7 +246,7 @@ function SimpleApp() {
           <Card variant="elevated" className="app__output-card">
             <div className="md-card__content">
               <div className="spec-header">
-                <h3 className="md-card__title">Generated Specification</h3>
+                <h3 className="md-card__title">{t('specification.title')}</h3>
                 {spec && (
                   <div className="spec-actions">
                     <Button
@@ -251,7 +255,7 @@ function SimpleApp() {
                       onClick={handleCopyToClipboard}
                       className="spec-action-btn"
                     >
-                      📋 Copy
+                      📋 {t('specification.copyButton')}
                     </Button>
                     <Button
                       variant="outlined"
@@ -259,7 +263,7 @@ function SimpleApp() {
                       onClick={handleDownload}
                       className="spec-action-btn"
                     >
-                      💾 Download
+                      💾 {t('specification.downloadButton')}
                     </Button>
                   </div>
                 )}
@@ -270,7 +274,7 @@ function SimpleApp() {
                 </div>
               ) : (
                 <div className="placeholder">
-                  Your generated specification will appear here
+                  {t('specification.placeholder')}
                 </div>
               )}
             </div>

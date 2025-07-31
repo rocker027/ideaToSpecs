@@ -1,0 +1,42 @@
+{
+  "app": {
+    "title": "Idea-to-Specs Generator",
+    "subtitle": "Transform your ideas into detailed product specifications"
+  },
+  "form": {
+    "inputTitle": "Enter Your Product Idea",
+    "inputDescription": "Describe your concept, feature, or product vision. The more details you provide, the better the specification will be.",
+    "placeholder": "Example: I want to build a mobile app that helps users track their daily water intake, set reminders, and visualize their hydration progress over time...",
+    "generateButton": "Generate Specification",
+    "generating": "Generating..."
+  },
+  "specification": {
+    "title": "Generated Specification",
+    "placeholder": "Your generated specification will appear here",
+    "copyButton": "Copy",
+    "downloadButton": "Download"
+  },
+  "status": {
+    "checking": "Checking API...",
+    "connected": "API Connected",
+    "disconnected": "API Disconnected"
+  },
+  "messages": {
+    "specCopied": "Specification copied to clipboard!",
+    "specDownloaded": "Specification downloaded as {{filename}}",
+    "specGenerated": "Specification generated successfully!",
+    "enterIdea": "Please enter an idea",
+    "ideaTooShort": "Please provide a more detailed idea (at least 10 characters)",
+    "apiNotAvailable": "API service is not available. Please try again later.",
+    "downloadFailed": "Failed to download specification",
+    "connectionError": "Unable to connect to server. Please check your connection.",
+    "serverError": "Server is experiencing issues. Please try again later.",
+    "generateFailed": "Failed to generate specification",
+    "invalidResponse": "Invalid JSON response from server"
+  },
+  "language": {
+    "switch": "Language Switch",
+    "chinese": "中文",
+    "english": "English"
+  }
+}

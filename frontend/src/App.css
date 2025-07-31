@@ -61,7 +61,10 @@ body {
 .app__status {
   display: flex;
   align-items: center;
-  gap: var(--md-sys-space-small);
+  gap: var(--md-sys-space-medium);
+}
+
+.app__status-indicator {
   padding: var(--md-sys-space-small) var(--md-sys-space-large);
   background-color: var(--md-sys-color-secondary-container);
   border-radius: var(--md-sys-shape-corner-full);
@@ -298,6 +301,11 @@ body {
     flex-direction: column;
     gap: var(--md-sys-space-medium);
     align-items: flex-start;
+  }
+  
+  .app__status {
+    width: 100%;
+    justify-content: space-between;
   }
   
   .app__main {

@@ -1,0 +1,147 @@
+/* Language Switch Component - Material Design 3 */
+
+.language-switch {
+  position: relative;
+  display: inline-block;
+}
+
+.language-switch__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-small);
+  padding: var(--md-sys-space-small) var(--md-sys-space-medium);
+  background-color: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-small);
+  font-family: var(--md-sys-typescale-label-medium-font);
+  font-size: var(--md-sys-typescale-label-medium-size);
+  font-weight: var(--md-sys-typescale-label-medium-weight);
+  cursor: pointer;
+  transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  user-select: none;
+  min-width: 100px;
+}
+
+.language-switch__trigger:hover {
+  background-color: var(--md-sys-color-surface-container-high);
+  border-color: var(--md-sys-color-outline);
+}
+
+.language-switch__trigger:active {
+  background-color: var(--md-sys-color-surface-container-highest);
+}
+
+.language-switch__trigger:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.language-switch__flag {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.language-switch__name {
+  flex: 1;
+  text-align: left;
+}
+
+.language-switch__arrow {
+  font-size: 10px;
+  transition: transform var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.language-switch__arrow--open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.language-switch__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-small);
+  box-shadow: var(--md-sys-elevation-level2);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.language-switch__option {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-small);
+  width: 100%;
+  padding: var(--md-sys-space-small) var(--md-sys-space-medium);
+  background: none;
+  border: none;
+  color: var(--md-sys-color-on-surface);
+  font-family: var(--md-sys-typescale-label-medium-font);
+  font-size: var(--md-sys-typescale-label-medium-size);
+  font-weight: var(--md-sys-typescale-label-medium-weight);
+  cursor: pointer;
+  transition: background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  text-align: left;
+}
+
+.language-switch__option:hover {
+  background-color: var(--md-sys-color-surface-container-high);
+}
+
+.language-switch__option:active {
+  background-color: var(--md-sys-color-surface-container-highest);
+}
+
+.language-switch__option--active {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.language-switch__option--active:hover {
+  background-color: var(--md-sys-color-primary-container);
+  filter: brightness(1.05);
+}
+
+.language-switch__option-flag {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.language-switch__option-name {
+  flex: 1;
+}
+
+/* Backdrop */
+.language-switch__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: transparent;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .language-switch__trigger {
+    min-width: 80px;
+    padding: var(--md-sys-space-extra-small) var(--md-sys-space-small);
+  }
+  
+  .language-switch__name {
+    display: none;
+  }
+  
+  .language-switch__dropdown {
+    min-width: 120px;
+  }
+  
+  .language-switch__option-name {
+    display: block;
+  }
+}
