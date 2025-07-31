@@ -33,11 +33,11 @@ Idea-to-Specs Generator is a production-ready local web application that convert
 npm run setup                 # Install dependencies and setup database
 
 # Development servers
-./scripts/start.sh            # Start both servers with health checks
+./scripts/start.sh            # Start both servers with health checks + port cleanup
 ./scripts/start-with-auth.sh  # Start with strict OAuth authentication check
 npm run dev                   # Concurrent frontend (:3000) and backend (:3001)
 npm run dev:frontend          # React dev server only
-npm run dev:backend           # Express server only
+npm run dev:backend           # Express server only (with nodemon for auto-reload)
 ```
 
 ### Production and Testing
@@ -133,6 +133,7 @@ CREATE INDEX idx_performance_created_at ON performance_metrics(created_at DESC);
 
 ### Backend Development Standards
 - **ES Modules**: Consistent import/export throughout codebase
+- **Modular Architecture**: Server organized into services (database, websocket, gemini), middleware (security, logging, validation), controllers, and routes
 - **Security First**: Parameterized queries, input validation, security headers, rate limiting
 - **Error Handling**: Structured error responses with timestamps, development vs production error details
 - **Performance**: Database indexing, connection pooling, request timing, automated maintenance
@@ -217,6 +218,14 @@ npm run monitor            # Real-time performance metrics and system health
 - **Security Middleware**: Rate limiting, CORS, input validation, security headers
 - **Error Recovery**: Gemini CLI failures, network issues, database connection problems
 
+### Backend Test Scripts
+```bash
+# Individual test categories
+npm run test:load              # Load testing with concurrent requests
+npm run test:examples          # Usage examples and documentation validation
+node backend/test-*.js         # Run specific test files (test-api.js, test-websocket-integration.js, etc.)
+```
+
 ## Advanced Architecture Features
 
 ### Real-time Progress Tracking (WebSocket)
@@ -255,5 +264,26 @@ socket.on('job-update', (update) => {
 - **CORS Configuration**: Environment-based origin restrictions
 - **SQL Injection Protection**: Parameterized queries throughout
 - **Error Information Disclosure**: Limited error details in production mode
+
+## Development Architecture Notes
+
+### Key Implementation Details
+- **Server Architecture**: Modularized Express.js server with class-based initialization (`IdeaToSpecsServer`)
+- **Frontend State Management**: React hooks-based state with context providers for toasts and error boundaries
+- **WebSocket Integration**: Socket.IO with job-based subscriptions and progress tracking
+- **Accessibility Features**: Comprehensive ARIA support, keyboard navigation, and screen reader compatibility
+- **Error Recovery**: Automatic retries, graceful degradation, and user-friendly error messages
+
+### Port Management
+- Frontend runs on port 3000 (Vite dev server)
+- Backend runs on port 3001 (Express server)
+- Start script automatically cleans up ports to prevent conflicts
+
+### Key Files for Future Development
+- `backend/server.js`: Main server entry point with modular initialization
+- `backend/services/`: Core business logic (database, websocket, gemini)
+- `backend/middleware/`: Security, logging, validation, and error handling
+- `frontend/src/App.jsx`: Main React application with hooks and state management
+- `frontend/src/services/api.js`: API client with WebSocket integration
 
 This is a production-ready application with enterprise-level features including real-time communication, comprehensive monitoring, security hardening, and automated testing validation.

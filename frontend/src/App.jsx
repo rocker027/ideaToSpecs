@@ -1,536 +1,296 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import IdeaInput from './components/IdeaInput';
-import SpecificationPreview from './components/SpecificationPreview';
-import HistoryPanel from './components/HistoryPanel';
-import ProgressIndicator from './components/ProgressIndicator';
-import ConnectionStatus from './components/ConnectionStatus';
-import { ToastProvider, useToast } from './components/ToastProvider';
-import { ScreenReaderAnnouncer, SkipLinks, AccessibilitySettings, LoadingAnnouncement } from './components/AccessibilityHelper';
+import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import ErrorBoundary from './components/ErrorBoundary';
-import { useGlobalKeyboardShortcuts } from './hooks/useKeyboardShortcuts.jsx';
-import { KeyboardShortcutsHelp } from './hooks/useKeyboardShortcuts.jsx';
-import { apiService, websocketService, copyToClipboard } from './services/api';
+import { ToastProvider, useToast } from './components/ToastProvider';
+import Button from './components/ui/Button';
+import TextField from './components/ui/TextField';
+import Card from './components/ui/Card';
 import './App.css';
-import './components/KeyboardShortcutsHelp.css';
-import './components/AccessibilityHelper.css';
 
-function AppContent() {
-  const [currentSpec, setCurrentSpec] = useState(null);
+// Simple working version
+function SimpleApp() {
+  const [idea, setIdea] = useState('');
+  const [spec, setSpec] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [backendStatus, setBackendStatus] = useState('checking');
-  const [jobProgress, setJobProgress] = useState({ status: 'idle', jobId: null, message: '' });
-  const [wsConnected, setWsConnected] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
-  const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
+  const [apiStatus, setApiStatus] = useState('checking'); // checking, connected, disconnected
   const toast = useToast();
-  
-  // Refs for keyboard navigation
-  const inputRef = useRef(null);
-  const historyRef = useRef(null);
-  const previewRef = useRef(null);
 
-  // Check backend health on app load
-  useEffect(() => {
-    // Wrap in try-catch to prevent crashes
+  // 複製到剪貼簿功能
+  const handleCopyToClipboard = async () => {
     try {
-      checkBackendHealth();
-      initializeWebSocket();
-      
-      // Setup online/offline listeners
-      const handleOnline = () => {
-        setIsOnline(true);
-        toast.showSuccess('Connection restored', { duration: 3000 });
-        checkBackendHealth();
-      };
-      
-      const handleOffline = () => {
-        setIsOnline(false);
-        toast.showWarning('You are offline', { persistent: true });
-      };
-      
-      window.addEventListener('online', handleOnline);
-      window.addEventListener('offline', handleOffline);
-      
-      return () => {
-        window.removeEventListener('online', handleOnline);
-        window.removeEventListener('offline', handleOffline);
-        try {
-          websocketService.cleanup();
-        } catch (error) {
-          console.error('Error cleaning up WebSocket:', error);
-        }
-      };
-    } catch (error) {
-      console.error('Error initializing app:', error);
-      setError('Failed to initialize application');
-    }
-  }, [toast]);
-  
-  const initializeWebSocket = useCallback(() => {
-    try {
-      websocketService.initialize();
-      
-      // Listen for WebSocket connection changes
-      const removeListener = websocketService.onConnectionChange((status) => {
-        setWsConnected(status.connected);
-        
-        if (status.connected) {
-          toast.showSuccess('Real-time connection established', { duration: 3000 });
-        } else if (status.error) {
-          console.warn('WebSocket connection failed:', status.error);
-          toast.showWarning('Real-time connection failed, using fallback mode', { duration: 5000 });
-        }
-      });
-      
-      return removeListener;
-    } catch (error) {
-      console.error('Failed to initialize WebSocket:', error);
-      toast.showError('Failed to initialize real-time connection', { duration: 5000 });
-      return () => {}; // Return empty cleanup function
-    }
-  }, [toast]);
-  
-  // Keyboard shortcuts setup
-  const keyboardCallbacks = {
-    showHelp: () => setShowShortcutsHelp(true),
-    closeModals: () => {
-      setShowShortcutsHelp(false);
-      setShowAccessibilitySettings(false);
-      toast.clearAllToasts();
-    },
-    focusInput: () => {
-      const input = inputRef.current?.querySelector('textarea');
-      if (input) {
-        input.focus();
-        window.announceToScreenReader?.('Focused on idea input');
-      }
-    },
-    focusHistory: () => {
-      const history = historyRef.current;
-      if (history) {
-        const firstButton = history.querySelector('button');
-        if (firstButton) {
-          firstButton.focus();
-          window.announceToScreenReader?.('Focused on history panel');
-        }
-      }
-    },
-    submitForm: () => {
-      const textarea = inputRef.current?.querySelector('textarea');
-      if (textarea && textarea.value.trim().length >= 10) {
-        const form = textarea.closest('form');
-        if (form) {
-          const submitButton = form.querySelector('button[type="submit"]');
-          if (submitButton && !submitButton.disabled) {
-            submitButton.click();
-          }
-        }
-      }
-    },
-    copySpec: () => {
-      if (currentSpec?.specification) {
-        handleCopy();
-      } else {
-        toast.showWarning('No specification available to copy');
-      }
-    },
-    downloadSpec: () => {
-      if (currentSpec?.id) {
-        handleDownload(currentSpec.id);
-      } else {
-        toast.showWarning('No specification available to download');
-      }
-    },
-    announceStatus: () => {
-      const statusMessage = [];
-      statusMessage.push(`Backend: ${backendStatus}`);
-      statusMessage.push(`WebSocket: ${wsConnected ? 'connected' : 'disconnected'}`);
-      statusMessage.push(`Network: ${isOnline ? 'online' : 'offline'}`);
-      if (loading) statusMessage.push('Currently generating specification');
-      if (currentSpec) statusMessage.push('Specification available');
-      
-      window.announceToScreenReader?.(statusMessage.join(', '), 'assertive');
-    },
-    showAccessibilitySettings: () => setShowAccessibilitySettings(true),
-    skipToMain: () => {
-      const main = document.querySelector('#main-content');
-      if (main) {
-        main.focus();
-        main.scrollIntoView({ behavior: 'smooth' });
-        window.announceToScreenReader?.('Navigated to main content');
-      }
+      await navigator.clipboard.writeText(spec);
+      toast.showSuccess('Specification copied to clipboard!');
+    } catch (err) {
+      // 備用方案：使用 textarea 複製
+      const textArea = document.createElement('textarea');
+      textArea.value = spec;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      toast.showSuccess('Specification copied to clipboard!');
     }
   };
-  
-  useGlobalKeyboardShortcuts(keyboardCallbacks);
 
-  const checkBackendHealth = useCallback(async () => {
+  // 下載為 Markdown 文件
+  const handleDownload = () => {
     try {
-      setBackendStatus('checking');
-      const healthData = await apiService.healthCheck();
-      setBackendStatus('connected');
+      const blob = new Blob([spec], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
       
-      // Show detailed health info if available
-      if (healthData?.services) {
-        const unhealthyServices = Object.entries(healthData.services)
-          .filter(([, status]) => status !== 'healthy' && status !== 'connected' && status !== 'available')
-          .map(([service]) => service);
+      // 生成文件名（基於時間戳和想法的前幾個字）
+      const timestamp = new Date().toISOString().slice(0, 16).replace(/[:-]/g, '');
+      const ideaPrefix = idea.trim().slice(0, 20).replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_');
+      const filename = `spec_${ideaPrefix}_${timestamp}.md`;
+      
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.showSuccess(`Specification downloaded as ${filename}`);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.showError('Failed to download specification');
+    }
+  };
+
+  // Check API health on component mount
+  useEffect(() => {
+    const checkApiHealth = async () => {
+      try {
+        // Create AbortController for timeout functionality
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         
-        if (unhealthyServices.length > 0) {
-          toast.showWarning(
-            `Some services may be limited: ${unhealthyServices.join(', ')}`,
-            { duration: 6000 }
-          );
-        }
-      }
-    } catch (err) {
-      console.error('Backend health check failed:', err);
-      setBackendStatus('disconnected');
-      
-      // Only show toast if we're online and the toast service is available
-      if (isOnline && toast && typeof toast.showError === 'function') {
-        toast.showError(
-          'Backend service is unavailable. Please try again later.',
-          { 
-            duration: 8000,
-            actions: [{
-              label: 'Retry',
-              handler: () => checkBackendHealth(),
-              type: 'primary'
-            }]
-          }
-        );
-      }
-    }
-  }, [isOnline, toast]);
-
-  const handleIdeaSubmit = useCallback(async (userInput) => {
-    if (!isOnline) {
-      toast.showError('You are offline. Please check your internet connection.');
-      return;
-    }
-    
-    if (backendStatus !== 'connected') {
-      toast.showError('Backend service is not available. Please try again later.');
-      return;
-    }
-    
-    setLoading(true);
-    setError('');
-    setJobProgress({ status: 'started', jobId: null, message: 'Initializing...' });
-    
-    let loadingToastId = null;
-    
-    try {
-      // Show loading toast for longer operations
-      loadingToastId = toast.showLoading(
-        'Generating specification... This may take 30-120 seconds.',
-        { persistent: true }
-      );
-      
-      const response = await apiService.generateSpecWithFallback(
-        userInput,
-        (progressUpdate) => {
-          console.log('Progress update:', progressUpdate);
-          setJobProgress({
-            status: progressUpdate.status,
-            jobId: progressUpdate.jobId,
-            message: progressUpdate.message || ''
-          });
-          
-          // Update loading toast with progress
-          if (loadingToastId && progressUpdate.status === 'processing') {
-            toast.updateToast(loadingToastId, {
-              message: 'Processing your idea... Please wait.'
-            });
-          }
-        }
-      );
-      
-      // Handle the response
-      if (response.specification) {
-        setCurrentSpec({
-          id: response.id,
-          userInput: userInput,
-          specification: response.specification,
-          createdAt: response.created_at || new Date().toISOString()
+        const response = await fetch('/api/health', {
+          method: 'GET',
+          signal: controller.signal
         });
         
-        setJobProgress({ status: 'completed', jobId: response.id, message: 'Specification generated successfully!' });
+        clearTimeout(timeoutId);
         
-        // Remove loading toast and show success
-        if (loadingToastId) {
-          toast.removeToast(loadingToastId);
+        if (response.ok) {
+          console.log('API health check successful - button should be enabled');
+          setApiStatus('connected');
+        } else {
+          console.warn('API health check failed with status:', response.status);
+          setApiStatus('disconnected');
         }
-        toast.showSuccess(
-          'Specification generated successfully!',
-          {
-            duration: 4000,
-            actions: [{
-              label: 'Copy to Clipboard',
-              handler: () => handleCopy(response.specification),
-              type: 'secondary'
-            }]
-          }
-        );
-      } else {
-        throw new Error('No specification received from server');
+      } catch (error) {
+        console.warn('API health check failed:', error);
+        setApiStatus('disconnected');
       }
-    } catch (err) {
-      console.error('Error generating specification:', err);
-      
-      const errorMessage = err.message || 'Failed to generate specification';
-      setError(errorMessage);
-      setJobProgress({ status: 'failed', jobId: null, message: errorMessage });
-      
-      // Remove loading toast and show error
-      if (loadingToastId) {
-        toast.removeToast(loadingToastId);
-      }
-      
-      toast.showError(
-        errorMessage,
-        {
-          duration: 8000,
-          actions: [
-            {
-              label: 'Try Again',
-              handler: () => handleIdeaSubmit(userInput),
-              type: 'primary'
-            },
-            {
-              label: 'Check Status',
-              handler: checkBackendHealth,
-              type: 'secondary'
-            }
-          ]
-        }
-      );
-    } finally {
-      setLoading(false);
-      
-      // Reset progress after a delay
-      setTimeout(() => {
-        setJobProgress({ status: 'idle', jobId: null, message: '' });
-      }, 3000);
-    }
-  }, [isOnline, backendStatus, toast, checkBackendHealth]);
+    };
 
-  const handleHistorySelect = (historyItem) => {
-    setCurrentSpec(historyItem);
-    setError(''); // Clear any previous errors
-  };
+    checkApiHealth();
+    
+    // Set up periodic health checks every 30 seconds
+    const healthCheckInterval = setInterval(checkApiHealth, 30000);
+    
+    return () => clearInterval(healthCheckInterval);
+  }, []);
 
-  const handleCopy = useCallback(async (text) => {
-    try {
-      const textToCopy = text || currentSpec?.specification;
-      if (!textToCopy) {
-        toast.showWarning('No specification to copy');
-        return;
-      }
-      
-      // Use the copyToClipboard utility from api service
-      const success = await copyToClipboard(textToCopy);
-      
-      if (success) {
-        toast.showSuccess('Specification copied to clipboard!', { duration: 3000 });
-      } else {
-        throw new Error('Copy failed');
-      }
-    } catch (err) {
-      console.error('Copy failed:', err);
-      toast.showError(
-        'Failed to copy to clipboard. Please try selecting and copying manually.',
-        { duration: 5000 }
-      );
-    }
-  }, [currentSpec?.specification, toast]);
-
-  const handleDownload = useCallback(async (specId) => {
-    if (!isOnline) {
-      toast.showError('You are offline. Cannot download file.');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!idea.trim()) {
+      toast.showWarning('Please enter an idea');
       return;
     }
-    
-    const downloadToastId = toast.showLoading('Preparing download...');
-    
-    try {
-      await apiService.downloadSpec(specId);
-      
-      toast.removeToast(downloadToastId);
-      toast.showSuccess(
-        'Specification downloaded successfully!',
-        { duration: 4000 }
-      );
-    } catch (err) {
-      console.error('Download failed:', err);
-      const errorMessage = err.message || 'Failed to download specification';
-      
-      toast.removeToast(downloadToastId);
-      toast.showError(
-        errorMessage,
-        {
-          duration: 6000,
-          actions: [{
-            label: 'Try Again',
-            handler: () => handleDownload(specId),
-            type: 'primary'
-          }]
-        }
-      );
-      
-      setError(errorMessage);
+
+    if (idea.trim().length < 10) {
+      toast.showWarning('Please provide a more detailed idea (at least 10 characters)');
+      return;
     }
-  }, [isOnline, toast]);
+
+    if (apiStatus === 'disconnected') {
+      toast.showError('API service is not available. Please try again later.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('Sending request to /api/generate with idea:', idea.trim());
+      
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          idea: idea.trim() 
+        }),
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      const responseText = await response.text();
+      console.log('Raw response text (first 200 chars):', responseText.substring(0, 200));
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse error response as JSON:', parseError);
+          throw new Error(`Server error: ${response.status} - ${responseText.substring(0, 100)}`);
+        }
+        throw new Error(errorData.error || `Server error: ${response.status}`);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse success response as JSON:', parseError);
+        console.error('Response text:', responseText);
+        throw new Error('Invalid JSON response from server');
+      }
+      
+      console.log('Parsed data keys:', Object.keys(data));
+      
+      if (data.generatedSpec) {
+        setSpec(data.generatedSpec);
+        toast.showSuccess('Specification generated successfully!');
+      } else if (data.specification) {
+        setSpec(data.specification);
+        toast.showSuccess('Specification generated successfully!');
+      } else {
+        console.error('Response data:', data);
+        throw new Error('No specification received from server');
+      }
+    } catch (error) {
+      console.error('Error generating specification:', error);
+      
+      let errorMessage = 'Failed to generate specification';
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Unable to connect to server. Please check your connection.';
+      } else if (error.message.includes('Server error: 5')) {
+        errorMessage = 'Server is experiencing issues. Please try again later.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.showError(errorMessage);
+      setSpec(''); // Clear any previous specification
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="app">
-      <SkipLinks />
-      <ScreenReaderAnnouncer />
-      <LoadingAnnouncement isLoading={loading} message="Generating specification, please wait..." />
-      
       <header className="app__header">
-        <h1 className="app__title">Idea to Specifications Generator</h1>
-        <p className="app__subtitle">
-          Transform your product ideas into detailed specifications using AI
-        </p>
-        
-        <div className="app__status-container">
-          <div className={`app__status app__status--${backendStatus}`}>
-            <div className="app__status-indicator"></div>
-            {backendStatus === 'checking' && 'Checking backend connection...'}
-            {backendStatus === 'connected' && 'Backend connected'}
-            {backendStatus === 'disconnected' && (
-              <>
-                Backend disconnected 
-                <button 
-                  onClick={checkBackendHealth} 
-                  className="app__retry-btn"
-                >
-                  Retry
-                </button>
-              </>
-            )}
+        <div className="app__header-content">
+          <div className="app__title-section">
+            <h1 className="app__title">Idea-to-Specs Generator</h1>
+            <p className="app__subtitle">
+              Transform your ideas into detailed product specifications
+            </p>
           </div>
           
-          <ConnectionStatus 
-            showDetails={false}
-            onStatusChange={(status) => {
-              console.log('WebSocket status changed:', status);
-            }}
-          />
-        </div>
-        
-        {/* Accessibility and Help Buttons */}
-        <div className="app__header-actions">
-          <button
-            onClick={() => setShowAccessibilitySettings(true)}
-            className="app__action-btn"
-            aria-label="Open accessibility settings"
-            title="Accessibility Settings (Alt+A)"
-          >
-            ⚙️ A11y
-          </button>
-          <button
-            onClick={() => setShowShortcutsHelp(true)}
-            className="app__action-btn"
-            aria-label="Show keyboard shortcuts"
-            title="Keyboard Shortcuts (Ctrl+/ or F1)"
-          >
-            ⌘ Help
-          </button>
+          <div className="app__status">
+            <div className={`app__status-indicator app__status-indicator--${apiStatus}`}>
+              {apiStatus === 'checking' && 'Checking API...'}
+              {apiStatus === 'connected' && 'API Connected'}
+              {apiStatus === 'disconnected' && 'API Disconnected'}
+            </div>
+          </div>
         </div>
       </header>
 
-      <main id="main-content" className="app__main" tabIndex="-1">
+      <main className="app__main">
         <div className="app__content">
-          <div className="app__input-section">
-            <div id="idea-input" ref={inputRef}>
-              <IdeaInput 
-                onSubmit={handleIdeaSubmit} 
-                loading={loading}
-                disabled={!isOnline || backendStatus !== 'connected'}
-              />
+          <Card variant="elevated" className="app__input-card">
+            <div className="md-card__content">
+              <h3 className="md-card__title">Enter Your Product Idea</h3>
+              <p className="md-card__description">
+                Describe your concept, feature, or product vision. The more details you provide, the better the specification will be.
+              </p>
+              <form onSubmit={handleSubmit}>
+                <TextField
+                  value={idea}
+                  onChange={(e) => setIdea(e.target.value)}
+                  placeholder="Example: I want to build a mobile app that helps users track their daily water intake, set reminders, and visualize their hydration progress over time..."
+                  multiline
+                  rows={4}
+                  disabled={loading}
+                  variant="outlined"
+                />
+                <div className="app__form-actions">
+                  <Button
+                    type="submit"
+                    variant="filled"
+                    disabled={loading || !idea.trim() || apiStatus !== 'connected'}
+                    loading={loading}
+                    onClick={() => {
+                      console.log('Button clicked - states:', { loading, idea: idea.trim(), apiStatus });
+                    }}
+                  >
+                    {loading ? 'Generating...' : 'Generate Specification'}
+                  </Button>
+                  {/* Debug info */}
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+                    Debug: API={apiStatus}, Loading={loading.toString()}, HasIdea={Boolean(idea.trim()).toString()}
+                  </div>
+                </div>
+              </form>
             </div>
-            
-            {/* Progress Indicator */}
-            <ProgressIndicator
-              status={jobProgress.status}
-              message={jobProgress.message}
-              jobId={jobProgress.jobId}
-              showDetails={true}
-              onCancel={() => {
-                // TODO: Implement job cancellation if supported by backend
-                toast.showInfo('Job cancellation is not yet supported');
-              }}
-            />
-            
-            {error && (
-              <div className="app__error" role="alert">
-                <svg className="app__error-icon" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                {error}
-                <button 
-                  onClick={() => setError('')} 
-                  className="app__error-close"
-                  aria-label="Close error message"
-                >
-                  ×
-                </button>
-              </div>
-            )}
-            
-            <div id="specification-preview" ref={previewRef}>
-              <SpecificationPreview
-                specification={currentSpec?.specification}
-                userInput={currentSpec?.userInput}
-                specId={currentSpec?.id}
-                loading={loading}
-                onCopy={() => handleCopy()}
-                onDownload={handleDownload}
-              />
-            </div>
-          </div>
+          </Card>
           
-          <aside className="app__sidebar">
-            <div id="history-panel" ref={historyRef}>
-              <HistoryPanel 
-                onSelectHistory={handleHistorySelect}
-                currentSpecId={currentSpec?.id}
-              />
+          <Card variant="elevated" className="app__output-card">
+            <div className="md-card__content">
+              <div className="spec-header">
+                <h3 className="md-card__title">Generated Specification</h3>
+                {spec && (
+                  <div className="spec-actions">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={handleCopyToClipboard}
+                      className="spec-action-btn"
+                    >
+                      📋 Copy
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small" 
+                      onClick={handleDownload}
+                      className="spec-action-btn"
+                    >
+                      💾 Download
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {spec ? (
+                <div className="specification-content markdown-content">
+                  <ReactMarkdown>{spec}</ReactMarkdown>
+                </div>
+              ) : (
+                <div className="placeholder">
+                  Your generated specification will appear here
+                </div>
+              )}
             </div>
-          </aside>
+          </Card>
         </div>
       </main>
-
-      <footer className="app__footer">
-        <p>Powered by Gemini AI | Built with React + Node.js</p>
-      </footer>
-      
-      {/* Modal dialogs */}
-      {showShortcutsHelp && (
-        <KeyboardShortcutsHelp onClose={() => setShowShortcutsHelp(false)} />
-      )}
-      
-      {showAccessibilitySettings && (
-        <AccessibilitySettings 
-          isOpen={showAccessibilitySettings}
-          onClose={() => setShowAccessibilitySettings(false)} 
-        />
-      )}
     </div>
   );
 }
 
-// Main App component with Toast Provider and Error Boundary
+// Main App with providers
 function App() {
   return (
     <ErrorBoundary>
-      <ToastProvider maxToasts={5}>
-        <AppContent />
+      <ToastProvider maxToasts={3}>
+        <SimpleApp />
       </ToastProvider>
     </ErrorBoundary>
   );

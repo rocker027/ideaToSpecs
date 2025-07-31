@@ -1,0 +1,205 @@
+/* Material Design 3 TextField Component */
+
+.md-textfield {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.md-textfield__container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.md-textfield__input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--md-sys-typescale-body-large-font);
+  font-size: var(--md-sys-typescale-body-large-size);
+  font-weight: var(--md-sys-typescale-body-large-weight);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  letter-spacing: var(--md-sys-typescale-body-large-tracking);
+  color: var(--md-sys-color-on-surface);
+  caret-color: var(--md-sys-color-primary);
+  resize: vertical;
+}
+
+.md-textfield__input::placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 1;
+}
+
+/* Enhanced placeholder styling for label-less fields */
+.md-textfield:not(.md-textfield--has-label) .md-textfield__input::placeholder {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.md-textfield__label {
+  position: absolute;
+  left: var(--md-sys-space-large);
+  color: var(--md-sys-color-on-surface-variant);
+  font-family: var(--md-sys-typescale-body-large-font);
+  font-size: var(--md-sys-typescale-body-large-size);
+  font-weight: var(--md-sys-typescale-body-large-weight);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  pointer-events: none;
+  transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  transform-origin: left center;
+  background-color: var(--md-sys-color-surface);
+  padding: 0 var(--md-sys-space-extra-small);
+}
+
+/* Outlined Variant */
+.md-textfield--outlined .md-textfield__input {
+  padding: var(--md-sys-space-large);
+  min-height: 56px;
+}
+
+.md-textfield--outlined .md-textfield__input[type="textarea"] {
+  min-height: 120px;
+  padding: var(--md-sys-space-large);
+}
+
+/* Outlined Variant without label */
+.md-textfield--outlined:not(.md-textfield--has-label) .md-textfield__input {
+  padding: var(--md-sys-space-large);
+}
+
+.md-textfield--outlined:not(.md-textfield--has-label) .md-textfield__input[type="textarea"] {
+  min-height: 120px;
+  padding: var(--md-sys-space-large);
+}
+
+.md-textfield--outlined .md-textfield__outline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-extra-small);
+  pointer-events: none;
+  transition: border-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+}
+
+.md-textfield--outlined .md-textfield__legend {
+  padding: 0;
+  margin-left: var(--md-sys-space-medium);
+  font-size: var(--md-sys-typescale-body-small-size);
+  line-height: 0;
+  visibility: hidden;
+  width: auto;
+  max-width: 100%;
+}
+
+.md-textfield--outlined .md-textfield__legend span {
+  padding: 0 var(--md-sys-space-extra-small);
+  visibility: visible;
+}
+
+.md-textfield--outlined.md-textfield--focused .md-textfield__outline,
+.md-textfield--outlined.md-textfield--has-value .md-textfield__outline {
+  border-color: var(--md-sys-color-primary);
+}
+
+.md-textfield--outlined.md-textfield--focused .md-textfield__label,
+.md-textfield--outlined.md-textfield--has-value .md-textfield__label {
+  transform: translateY(-50%) scale(0.75);
+  top: 0;
+  color: var(--md-sys-color-primary);
+}
+
+/* Filled Variant */
+.md-textfield--filled .md-textfield__container {
+  background-color: var(--md-sys-color-surface-container-highest);
+  border-radius: var(--md-sys-shape-corner-extra-small) var(--md-sys-shape-corner-extra-small) 0 0;
+  border-bottom: 1px solid var(--md-sys-color-on-surface-variant);
+  transition: border-bottom-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+}
+
+.md-textfield--filled .md-textfield__input {
+  padding: var(--md-sys-space-extra-large) var(--md-sys-space-large) var(--md-sys-space-small) var(--md-sys-space-large);
+  min-height: 56px;
+}
+
+.md-textfield--filled .md-textfield__label {
+  top: var(--md-sys-space-large);
+}
+
+.md-textfield--filled.md-textfield--focused .md-textfield__container {
+  border-bottom-color: var(--md-sys-color-primary);
+  border-bottom-width: 2px;
+}
+
+.md-textfield--filled.md-textfield--focused .md-textfield__label,
+.md-textfield--filled.md-textfield--has-value .md-textfield__label {
+  transform: translateY(-50%) scale(0.75);
+  top: var(--md-sys-space-small);
+  color: var(--md-sys-color-primary);
+}
+
+/* Error State */
+.md-textfield--error .md-textfield__outline {
+  border-color: var(--md-sys-color-error);
+}
+
+.md-textfield--error .md-textfield__label {
+  color: var(--md-sys-color-error);
+}
+
+.md-textfield--error .md-textfield__container {
+  border-bottom-color: var(--md-sys-color-error);
+}
+
+/* Disabled State */
+.md-textfield--disabled .md-textfield__input {
+  color: var(--md-sys-color-on-surface);
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.md-textfield--disabled .md-textfield__label {
+  color: var(--md-sys-color-on-surface);
+  opacity: 0.38;
+}
+
+.md-textfield--disabled .md-textfield__outline {
+  border-color: var(--md-sys-color-on-surface);
+  opacity: 0.12;
+}
+
+.md-textfield--disabled .md-textfield__container {
+  background-color: var(--md-sys-color-on-surface);
+  opacity: 0.04;
+  border-bottom-color: var(--md-sys-color-on-surface);
+  border-bottom-style: dotted;
+}
+
+/* Helper Text */
+.md-textfield__helper-text {
+  margin-top: var(--md-sys-space-extra-small);
+  padding: 0 var(--md-sys-space-large);
+  font-family: var(--md-sys-typescale-body-small-font);
+  font-size: var(--md-sys-typescale-body-small-size);
+  font-weight: var(--md-sys-typescale-body-small-weight);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.md-textfield--error .md-textfield__helper-text {
+  color: var(--md-sys-color-error);
+}
+
+/* Focus Ring */
+.md-textfield__input:focus-visible + .md-textfield__label,
+.md-textfield--focused .md-textfield__outline {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
